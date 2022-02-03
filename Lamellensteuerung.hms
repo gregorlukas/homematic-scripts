@@ -1,0 +1,155 @@
+! Datei:    Lamellensteuerung.hms                                
+! Projekt:  homematic-scripts 
+! Website:  https://smartandcozy.com 
+! Autor:    Gregor Lukas (gregor@smartandcozy.com)
+!  
+! Beschreibung:
+! Dieses Skript steuert einen DIY Antrieb für Lamellenvorhänge auf Basis von HM-LC-Sw4-WM. 
+!
+!-----
+! The MIT License (MIT)
+!
+! Copyright (c) Gregor Lukas <gregor@smartandcozy.com> (https://smartandcozy.com/)
+!
+! Permission is hereby granted, free of charge, to any person obtaining a copy
+! of this software and associated documentation files (the "Software"), to deal
+! in the Software without restriction, including without limitation the rights
+! to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+! copies of the Software, and to permit persons to whom the Software is
+! furnished to do so, subject to the following conditions:
+!
+! The above copyright notice and this permission notice shall be included in
+! all copies or substantial portions of the Software.
+!
+! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+! IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+! THE SOFTWARE.
+! ==========================================================================
+
+!
+!----- Konfiguration ----
+!
+
+! Name des Aktors für Rechtslauf
+string aktorRechtsName = "Wohnzimmer.SW.Lamellen.Rechts";
+
+! Name des Aktors für Linkslauf
+string aktorLinksName = "Wohnzimmer.SW.Lamellen.Links";
+
+! Homematic Variable zum erfassen des Ist-Zustands (0-100)
+string varIstName = "Wohnzimmer.VAR.Lamellen.Ist";
+
+! Homematic Variable zum erfassen des Soll-Status (0-100)
+string varSollName = "Wohnzimmer.VAR.Lamellen.Soll";
+
+! Homematic Variable zeit ob die Seteuerung aktiv ist (boolean)
+string varIstAktivName = "Wohnzimmer.VAR.Lamellen.Aktiv";
+
+! Laufzzeit von rechts nach links (0 - 100)
+real laufzeitLinks = 27.00;
+
+! Laufzzeit von links nach rechts (100 - 0)
+real laufzeitRechts = 27.54;
+
+
+!
+!----- Do-Not-Change ----
+!
+
+object chRechts = dom.GetObject(aktorRechtsName);
+if ( ! chRechts )
+{
+    WriteLine("[FEHLER] Aktor für Rechtslauf '" # aktorRechtsName # "' nicht gefunden.");
+    quit;
+}
+
+object chLinks = dom.GetObject(aktorLinksName);
+if ( ! chLinks )
+{
+    WriteLine("[FEHLER] Aktor für Linkslauf '" # aktorLinksName # "' nicht gefunden.");
+    quit;
+}
+
+object varIst = dom.GetObject(varIstName);
+if ( ! varIst )
+{
+    WriteLine("[FEHLER] Variable für Ist-Zustand '" # varIstName # "' nicht gefunden.");
+    quit;
+}
+
+object varSoll = dom.GetObject("Wohnzimmer.VAR.Lamellen.Soll");
+if ( ! varSoll )
+{
+    WriteLine("[FEHLER] Variable für Soll-Zustand '" # varSollName # "' nicht gefunden.");
+    quit;
+}
+
+object varIstAktiv = dom.GetObject(varIstAktivName);
+if ( ! varIstAktiv )
+{
+    WriteLine("[FEHLER] Variable für Aktivität '" # varIstAktiv # "' nicht gefunden.");
+    quit;
+}
+
+
+var dpRechtsOnTime = chRechts.DPByHssDP("ON_TIME");
+var dpLinksOnTime = chLinks.DPByHssDP("ON_TIME");
+
+real varIstValue = (varIst.Variable()).ToFloat();
+real varSollValue = (varSoll.Variable()).ToFloat();
+
+
+
+real GesLaufzeit = 27.00;
+
+
+if ( varIstAktiv.Variable() == 0 ) 
+{
+    
+    varIstAktiv.Variable(1);
+    
+    if (varSollValue > varIstValue) 
+    {
+
+        real aktuelleLaufzeit = ((varSollValue-varIstValue)/100)*laufzeitRechts;
+        dpRechtsOnTime.State(aktuelleLaufzeit);
+        chRechts.State(1);
+        varIst.Variable(varSollValue);
+        
+        WriteLine("Rechtslauf fuer " # aktuelleLaufzeit.ToString() # "s");
+        
+    };
+
+    if (varSollValue < varIstValue) 
+    {
+        
+        real aktuelleLaufzeit = ((varIstValue-varSollValue)/100)*laufzeitLinks;
+        dpLinksOnTime.State(aktuelleLaufzeit);
+        chLinks.State(1);
+        varIst.Variable(varSollValue);
+        
+        WriteLine("Linkslauf fuer " # aktuelleLaufzeit.ToString() # "s");
+
+    };
+
+    if (varSollValue == varIstValue) 
+    {
+
+        WriteLine("Keine Aenderung");
+
+    };
+    
+    varIstAktiv.Variable(0);
+
+} 
+else 
+{
+    
+    WriteLine("Lamellensteuerung bereits aktiv. Bitte warten.");
+    varSoll.Variable(varIstValue);
+
+};
