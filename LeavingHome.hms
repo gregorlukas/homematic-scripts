@@ -1,0 +1,79 @@
+! Datei:    LeavingHome.hms                                
+! Projekt:  homematic-scripts 
+! Website:  https://smartandcozy.com 
+! Autor:    Gregor Lukas (gregor@smartandcozy.com)
+!  
+! Beschreibung:
+! Leaving Home made easy. Dieses Skript schaltet alle Aktoren eines bestimmten Gewerks (bspw. "Leaving-Home") aus. 
+!
+!-----
+! The MIT License (MIT)
+!
+! Copyright (c) Gregor Lukas <gregor@smartandcozy.com> (https://smartandcozy.com/)
+!
+! Permission is hereby granted, free of charge, to any person obtaining a copy
+! of this software and associated documentation files (the "Software"), to deal
+! in the Software without restriction, including without limitation the rights
+! to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+! copies of the Software, and to permit persons to whom the Software is
+! furnished to do so, subject to the following conditions:
+!
+! The above copyright notice and this permission notice shall be included in
+! all copies or substantial portions of the Software.
+!
+! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+! IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+! THE SOFTWARE.
+! ==========================================================================
+
+!
+! Konfiguration
+!
+
+string  gewerk = "Leaving Home";     ! Alle Schalter und Dimmer dieses Gewerks werden ausgeschaltet
+boolean dryrun = false;               ! true = Testmodus aktiviert; es werden keine Schaltvorgänge ausgeführt
+
+!
+! Skript - Do not Change 
+!
+
+var gewerkObj = dom.GetObject(gewerk);
+string itemId;
+
+foreach(itemId, gewerkObj.EnumUsedIDs())
+{
+	var item = dom.GetObject(itemId);	
+	if (item.IsTypeOf(OT_CHANNEL))
+	{
+		var hssType = item.HssType();
+		var value = false;
+		var level = 0.0;
+		
+		if ( hssType.Find("SWITCH") != -1 )
+		{
+			
+      WriteLine("Switch " + item.Name());
+      value = item.DPByHssDP("STATE").Value();
+      if (value != 0 && !dryrun) 
+			{
+				WriteLine("Turn Off: " + item.Name());
+				item.State(0);
+			}
+		}
+		
+		if ( hssType.Find("DIMMER") != -1 )
+		{
+			WriteLine("Dimmer " + item.Name());
+      level = item.DPByHssDP("LEVEL").Value();
+      if (level > 0.0 && !dryrun) 
+			{
+				WriteLine("Dim to off: " + item.Name());
+				item.State(0);
+			}
+		}
+	}
+}

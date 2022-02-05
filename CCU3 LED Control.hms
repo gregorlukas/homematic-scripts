@@ -1,0 +1,66 @@
+! Datei:    CCU3 LED Control.hms                                
+! Projekt:  homematic-scripts 
+! Website:  https://smartandcozy.com 
+! Autor:    Gregor Lukas (gregor@smartandcozy.com)
+!  
+! Beschreibung:
+! Beispiele zur Steuerung bzw. zum Ausschalten der CCU3 LED. WICHTIG: die Beispiele 
+! funtionieren nur, wenn die systeminterne Steuerung (Prozess "hss_led") der LED 
+! beendet wird (siehe unten)
+!
+!-----
+! The MIT License (MIT)
+!
+! Copyright (c) Gregor Lukas <gregor@smartandcozy.com> (https://smartandcozy.com/)
+!
+! Permission is hereby granted, free of charge, to any person obtaining a copy
+! of this software and associated documentation files (the "Software"), to deal
+! in the Software without restriction, including without limitation the rights
+! to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+! copies of the Software, and to permit persons to whom the Software is
+! furnished to do so, subject to the following conditions:
+!
+! The above copyright notice and this permission notice shall be included in
+! all copies or substantial portions of the Software.
+!
+! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+! IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+! THE SOFTWARE.
+! ==========================================================================
+
+
+! Systeminterne Steuerung der LEDs durch die CCU deaktivieren (einmalig, nicht reboot-sicher)
+system.Exec("pkill hss_led")
+
+! LED ausschalten
+system.Exec("echo none >/sys/class/leds/rpi_rf_mod\:blue/trigger")
+system.Exec("echo none >/sys/class/leds/rpi_rf_mod\:green/trigger")
+system.Exec("echo none >/sys/class/leds/rpi_rf_mod\:red/trigger")
+system.Exec("echo 0 >/sys/class/leds/rpi_rf_mod\:blue/brightness")
+system.Exec("echo 0 >/sys/class/leds/rpi_rf_mod\:green/brightness")
+system.Exec("echo 0 >/sys/class/leds/rpi_rf_mod\:red/brightness")
+
+! Eine bestimme Farbe einschalten
+string color = "red"; ! Farbe; "red", "green" oder "blue"
+system.Exec("echo none >/sys/class/leds/rpi_rf_mod\:" # color # "/trigger")
+system.Exec("echo 1 >/sys/class/leds/rpi_rf_mod\:" # color # "/brightness")
+
+! Eine bestimme Farbe ausschalten
+string color = "red"; ! Farbe; "red", "green" oder "blue"
+system.Exec("echo 0 >/sys/class/leds/rpi_rf_mod\:" # color # "/brightness")
+
+! LED blinken lassen
+string color = "red"; ! Farbe; "red", "green" oder "blue"
+string onTime = 250; ! Einschaltzeit in milisekunden 
+string offTime = 250; ! Ausschaltzeit in milisekunden
+
+system.Exec("echo 1 >/sys/class/leds/rpi_rf_mod\:" # color # "/brightness")
+system.Exec("echo timer >/sys/class/leds/rpi_rf_mod\:" # color # "/trigger")
+system.Exec("echo " # onTime #" >/sys/class/leds/rpi_rf_mod\:" # color # "/delay_on")
+system.Exec("echo " # offTime #" >/sys/class/leds/rpi_rf_mod\:" # color # "/delay_off")
+
+
