@@ -1,0 +1,133 @@
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!                                                                       !
+!  Homematic Script Cheat Sheet by smartandcozy.com                     !
+!                                                                       !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!
+! A concise cheat sheet of most used Homematic Script syntax and use cases. 
+! Mostly based on official Homematic Script documentation available on https://www.eq-3.com/service/downloads.html
+!  Part 1 - Language description: https://www.eq-3.com/downloads/download/homematic/hm_web_ui_doku/HM-Skript_Teil_1_Sprachbeschreibung_V2.3.pdf 
+!  Part 2 - Object Model: https://www.eq-3.com/downloads/download/homematic/hm_web_ui_doku/hm_script_teil_2_objektmodell_v1.2.pdf 
+!  Part 3 - Examples: https://www.eq-3.com/downloads/download/homematic/hm_web_ui_doku/hm_script_teil_3_beispiele_v1.1.pdf 
+!  Part 4 - Data points: https://www.eq-3.com/downloads/download/homematic/hm_web_ui_doku/hm_devices_Endkunden.pdf 
+!
+! Autor: Gregor from https://smartandcozy.com 
+!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Part 1 - Flow Controls                                               !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+!Conditionals (if)
+integer i = 1;
+string myString;
+if (i == 1) { myString = "i == 1"; } 
+elseif (i == 2) { myString = "i == 2"; } 
+else { myString = "i != 1 && i != 2"; }
+WriteLine(myString);
+
+!Loops - while
+integer i = 0;
+while (i<=100) { 
+    WriteLine(i);
+    i = i + 1; 
+}
+
+!Loops - foreach
+string myString = "Val1,Val2,Val3";
+string elem; !has to be initialized before foreach
+foreach (elem, myString.Split(",")) {
+  WriteLine(elem);  
+}
+
+!Quite script ecexution
+quit;
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Part 2 - String Operations                                           !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+!Number of charachters in String
+string myString = "Test";
+integer count = myString.Length();
+WriteLine(count); !=4
+
+!Number of charachters in String
+string myString = "Test";
+string subString = myString.Substr(2,2); !index (zero based), length 
+WriteLine(subString); ! = "st"
+
+!Finding things in a string
+string myString = "Test";
+integer position = myString.Find("st"); ! index if found else -1
+WriteLine(position);
+boolean found = myString.Contains("es"); 
+WriteLine(found);
+boolean found = myString.StartsWith("st"); 
+WriteLine(found);
+boolean found = myString.EndsWith("st");
+WriteLine(found);
+
+!Replcing stings
+string myString = "I need a coffee";
+string result = myString.Replace("coffee", "tea"); ! string to find, replacement => resulting string; "I need tea"
+WriteLine(result);
+
+!Concatenate Strings
+string myVariable="Var1";
+string concatenatedString = "String1 "#myVariable#" String2";
+WriteLine(concatenatedString);
+
+!Split string into list and iterate
+string myString = "Val1;Val2;Val3";
+string myList =  myString.Split(";"); ! seperator => list
+string element;
+foreach (element, myList) {
+  WriteLine(element);  
+}
+
+!accessing element of list 
+string myString = "Val1;Val2;Val3";
+string element = myString.StrValueByIndex(";", 1); ! seperator, index (zero based) => element
+WriteLine(element);
+!This would not work: var doesNotWork = myList[1];
+
+!Trimming strings
+string myString = " Val1;Val2;Val3 ";
+string trimmed = myString.Trim(); 
+string trimmed = myString.LTrim(); 
+string trimmed = myString.RTrim();
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Part 3 - Accessing system variables and objects                      !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+!Get the valie of a Homematic System Variable
+var value = dom.GetObject("HMVariableName").Variable();
+
+!Set the value of a Homematic Script Variable
+dom.GetObject("HMVariableName").Variable("new Value");
+dom.GetObject("HMVariableName").Status("new Value"); !Alternative
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Part 4 - Practical Examples                                          !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+! Accessing triggering object within a program
+var triggeringObject = dom.GetObject("$src$");        !object which triggered the programm
+if (triggeringObject) { triggeringObject.State(1) }   !triggering Object exists, do something
+else { quit; }                                        !manual execution; 
+
+! Calling external programs
+var stdout;
+var stderr;
+system.Exec("curl --location --request POST 'https://myrestapi.com/demo' \
+--header 'Authorization: Basic RG8gbm90IHBvc3QgcGFzc3dvcmQgb24gZ2l0aHViIC0gc21hcnRhbmRjb3p5LmNvbQ=='"
+, &stdout, &stderr);
+WriteLine(stdout);
+
+!Timestamp as Unix Epoch in Seconds
+integer timestamp = system.Date("%F %X").ToTime().ToInteger();
