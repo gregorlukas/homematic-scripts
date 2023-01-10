@@ -62,5 +62,3 @@ system.Exec("echo 1 >/sys/class/leds/rpi_rf_mod\:" # color # "/brightness")
 system.Exec("echo timer >/sys/class/leds/rpi_rf_mod\:" # color # "/trigger")
 system.Exec("echo " # onTime #" >/sys/class/leds/rpi_rf_mod\:" # color # "/delay_on")
 system.Exec("echo " # offTime #" >/sys/class/leds/rpi_rf_mod\:" # color # "/delay_off")
-
-
