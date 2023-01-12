@@ -1,0 +1,12 @@
+var stdout;
+var stderr;
+system.Exec("curl -k --location --request GET 'https://dummyjson.com/products/1' | \
+jq -r '.stock'", &stdout, &stderr);
+if(stdout){
+  var stock = stdout.ToInteger();
+  WriteLine("Products in stock: "#stock);
+}
+else {
+  WriteLine("An error occured: "#stderr);
+}
+
